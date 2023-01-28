@@ -1,10 +1,11 @@
 import * as dotenv from 'dotenv'
+dotenv.config()
 import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import router from "./router.js";
+import DataWork from './sqlite.js'
 
-dotenv.config()
 const PORT = process.env.PORT || 5000;
 const app = express()
 
@@ -20,7 +21,7 @@ if (origins !== undefined) {
 }
 
 app.use(cors({
-    origin: "*",
+    origin: json,
     credentials: true
 }))
 
@@ -28,6 +29,7 @@ app.use("/api", router);
 
 const start = async () => {
     try {
+        await DataWork.createDefault();
         app.listen(PORT, () => {
             console.log(`Server started on PORT: ` + PORT);
         })
