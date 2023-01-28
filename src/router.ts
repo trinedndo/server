@@ -15,9 +15,22 @@ router.post('/insert', async (req, res) => {
     }
 })
 
-router.get('/delete/:id', async (req, res) => {
+router.post('/update', async (req, res) => {
     try {
-        await DataWork.removeProduct(Number(req.params.id))
+        const items: IProduct[] = req.body
+        await DataWork.updateProducts(items);
+        res.sendStatus(200);
+    }
+    catch (e) {
+        console.log(e);
+    }
+})
+
+router.post('/delete', async (req, res) => {
+    try {
+        const items: number[] = req.body
+        // console.log(items[0]);
+        await DataWork.removeProducts(items)
         res.sendStatus(200);
     }
     catch (e) {

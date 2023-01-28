@@ -35,5 +35,14 @@
     "express": "^4.18.2",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4"
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "include": [
+    "./src/**/*.tsx",
+    "./src/**/*.ts"
+  ]
 }

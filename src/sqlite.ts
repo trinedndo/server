@@ -6,7 +6,7 @@ class DataWork {
 
     async openDb() {
         return open({
-            filename: './database.db',
+            filename: process.env.DB_PATH || 'sqlite3.db',
             driver: sqlite3.Database
         });
     }
@@ -26,7 +26,7 @@ class DataWork {
         const db = await this.openDb();
         const res: { ID: number } | undefined = await db.get(`SELECT ID FROM LASTID`)
         if (res) {
-            await db.exec(`INSERT INTO PRODUCT VALUES (${res.ID}, "${item.title}", ${item.brand}, ${item.category}, "${item.img}", ${item.price}, ${item.available})`)
+            await db.exec(`INSERT INTO PRODUCT VALUES (${res.ID}, "${item.TITLE}", ${item.BRAND}, ${item.TYPE}, "${item.IMG}", ${item.PRICE}, ${item.INSTOCK})`)
             await db.exec(`UPDATE LASTID SET ID=${res.ID + 1} WHERE ID=${res.ID}`)
         }
         await db.close();
@@ -35,6 +35,36 @@ class DataWork {
     async removeProduct(id: number) {
         const db = await this.openDb();
         await db.exec(`DELETE FROM PRODUCT WHERE ID=${id}`)
+        await db.close();
+    }
+
+    async removeProducts(ids: number[]) {
+        const db = await this.openDb();
+
+        for (let i = 0; i < ids.length; i++) {
+            const e = ids[i];
+            await db.exec(`DELETE FROM PRODUCT WHERE ID=${e}`)
+        }
+
+        await db.close();
+    }
+
+    async updateProduct(item: IProduct) {
+        const db = await this.openDb();
+
+        await db.exec(`UPDATE PRODUCT SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`)
+
+        await db.close();
+    }
+
+    async updateProducts(items: IProduct[]) {
+        const db = await this.openDb();
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            await db.exec(`UPDATE PRODUCT SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`)
+        }
+
         await db.close();
     }
 
