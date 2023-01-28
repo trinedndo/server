@@ -31,7 +31,7 @@ const start = async () => {
     try {
         await DataWork.createDefault();
         app.listen(PORT, () => {
-            console.log(`Server started on PORT: ` + PORT);
+            console.log(`Server Started on PORT: ` + PORT);
         })
     }
     catch (e) {
