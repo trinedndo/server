@@ -4,12 +4,22 @@ import fs from 'fs'
 import { IProduct } from './models/IProduct.js'
 import { Verify } from './service/verifyProduct.js'
 import DataWork from './sqlite.js'
+import FiltersDB from './filters.js'
 import { UploadedFile } from 'express-fileupload'
 import { v4 as uuidv4 } from 'uuid'
 
 const __dirname = path.resolve()
 
 class Controller {
+  GetFilters = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = await FiltersDB.GetAll()
+      return res.json(filters)
+    } catch (e) {
+      next(e)
+    }
+  }
+
   getProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const products = await DataWork.getProducts()
@@ -155,6 +165,8 @@ class Controller {
 
   verifyUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('Verify User')
+
       const { login, password }: { login: string; password: string } = req.body
       const answer = await DataWork.verifyUser(login, password)
       if (answer === 2) return res.json({ err: 2 })

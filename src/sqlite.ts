@@ -1,33 +1,54 @@
 import sqlite3 from 'sqlite3'
 import { open } from 'sqlite'
-import { IProduct } from './models/IProduct.js'
+import { IFilter, IProduct } from './models/IProduct.js'
 import md5 from 'md5'
+import { openDb } from './utils/opendb.js'
+
+export const ProductsList = 'PL'
+
+const filters = [
+  {
+    ID: 0,
+    LID: 0,
+    NAME: 'Festool'
+  },
+  {
+    ID: 0,
+    LID: 0,
+    NAME: 'Bosch'
+  },
+  {
+    ID: 0,
+    LID: 0,
+    NAME: 'Miluware'
+  },
+  {
+    ID: 1,
+    LID: 0,
+    NAME: 'Скороварки'
+  },
+  {
+    ID: 1,
+    LID: 0,
+    NAME: 'Кастрюли'
+  },
+  {
+    ID: 1,
+    LID: 0,
+    NAME: 'Ножницы'
+  }
+]
 
 class DataWork {
-  async openDb () {
-    return open({
-      filename: process.env.DB_PATH || 'sqlite3.db',
-      driver: sqlite3.Database
-    })
-  }
-
-  async createDefault () {
-    const db = await this.openDb()
-    await db.exec(
-      'CREATE TABLE IF NOT EXISTS PRODUCT (ID INT, TITLE TEXT, BRAND INT, TYPE INT, IMG TEXT, PRICE INT, INSTOCK INT)'
-    )
-    await db.exec('CREATE TABLE IF NOT EXISTS LASTID (ID INT)')
-    const res: { ID: number } | undefined = await db.get(
-      `SELECT ID FROM LASTID`
-    )
-    if (res === undefined) {
-      await db.exec(`INSERT INTO LASTID VALUES (0)`)
-    }
-    await db.close()
-  }
+  // async openDb () {
+  //   return open({
+  //     filename: process.env.DB_PATH || 'sqlite3.db',
+  //     driver: sqlite3.Database
+  //   })
+  // }
 
   async getFreeId () {
-    const db = await this.openDb()
+    const db = await openDb()
     const res: { ID: number } | undefined = await db.get(
       `SELECT ID FROM LASTID`
     )
@@ -37,13 +58,13 @@ class DataWork {
   }
 
   async insertProduct (item: IProduct) {
-    const db = await this.openDb()
+    const db = await openDb()
     const res: { ID: number } | undefined = await db.get(
       `SELECT ID FROM LASTID`
     )
     if (!res) return false
     await db.exec(
-      `INSERT INTO PRODUCT VALUES (${res.ID}, "${item.TITLE}", ${item.BRAND}, ${item.TYPE}, "${item.IMG}", ${item.PRICE}, ${item.INSTOCK})`
+      `INSERT INTO ${ProductsList} VALUES (${res.ID}, "${item.TITLE}", ${item.BRAND}, ${item.TYPE}, "${item.IMG}", ${item.PRICE}, ${item.INSTOCK})`
     )
     await db.exec(`UPDATE LASTID SET ID=${res.ID + 1} WHERE ID=${res.ID}`)
     await db.close()
@@ -51,7 +72,7 @@ class DataWork {
   }
 
   async insertProducts (items: IProduct[]) {
-    const db = await this.openDb()
+    const db = await openDb()
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
       const res: { ID: number } | undefined = await db.get(
@@ -59,7 +80,7 @@ class DataWork {
       )
       if (res) {
         await db.exec(
-          `INSERT INTO PRODUCT VALUES (${res.ID}, "${item.TITLE}", ${item.BRAND}, ${item.TYPE}, "${item.IMG}", ${item.PRICE}, ${item.INSTOCK})`
+          `INSERT INTO ${ProductsList} VALUES (${res.ID}, "${item.TITLE}", ${item.BRAND}, ${item.TYPE}, "${item.IMG}", ${item.PRICE}, ${item.INSTOCK})`
         )
         await db.exec(`UPDATE LASTID SET ID=${res.ID + 1} WHERE ID=${res.ID}`)
       }
@@ -68,49 +89,47 @@ class DataWork {
   }
 
   async removeProduct (id: number) {
-    const db = await this.openDb()
-    await db.exec(`DELETE FROM PRODUCT WHERE ID=${id}`)
+    const db = await openDb()
+    await db.exec(`DELETE FROM ${ProductsList} WHERE ID=${id}`)
     await db.close()
   }
 
   async removeProducts (ids: number[]) {
-    const db = await this.openDb()
+    const db = await openDb()
 
     for (let i = 0; i < ids.length; i++) {
       const e = ids[i]
-      await db.exec(`DELETE FROM PRODUCT WHERE ID=${e}`)
+      await db.exec(`DELETE FROM ${ProductsList} WHERE ID=${e}`)
     }
 
     await db.close()
   }
 
   async updateProduct (item: IProduct) {
-    const db = await this.openDb()
+    const db = await openDb()
 
     await db.exec(
-      `UPDATE PRODUCT SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`
+      `UPDATE ${ProductsList} SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`
     )
-
     await db.close()
   }
 
   async updateProducts (items: IProduct[]) {
-    const db = await this.openDb()
+    const db = await openDb()
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
       await db.exec(
-        `UPDATE PRODUCT SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`
+        `UPDATE ${ProductsList} SET TITLE="${item.TITLE}", BRAND=${item.BRAND}, TYPE=${item.TYPE}, IMG="${item.IMG}", PRICE=${item.PRICE}, INSTOCK=${item.INSTOCK} WHERE ID=${item.ID}`
       )
     }
-
     await db.close()
   }
 
   async getProduct (id: number) {
-    const db = await this.openDb()
+    const db = await openDb()
     const res: IProduct | undefined = await db.get(
-      `SELECT * FROM PRODUCT WHERE ID=${id}`
+      `SELECT * FROM ${ProductsList} WHERE ID=${id}`
     )
     if (res) {
       await db.close()
@@ -122,8 +141,8 @@ class DataWork {
   }
 
   async getProducts () {
-    const db = await this.openDb()
-    const res: IProduct[] = await db.all(`SELECT * FROM PRODUCT`)
+    const db = await openDb()
+    const res: IProduct[] = await db.all(`SELECT * FROM ${ProductsList}`)
     await db.close()
     return res
   }
